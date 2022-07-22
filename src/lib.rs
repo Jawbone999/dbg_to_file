@@ -1,18 +1,29 @@
 #[macro_export]
 macro_rules! dbg_to_file {
-    // Handle the base case of no arguments.
-    () => {
-        use std::io::Write;
+    // Handle the base case of no arguments to print.
+    ($path:expr) => {
+        match $crate::__private_helpers::get_file($path) {
+            Ok(mut file) => {
+                use std::io::Write;
+                match writeln!(file, "[{}:{}]", file!(), line!()) {
+                    Ok(()) => {},
+                    Err(e) => {
+                        eprintln!("dbg_to_file failed to write to file: {:?}", e);
+                    }
+                }
+            }
+            Err(e) => {
+                eprintln!("dbg_to_file failed to create/open file: {:?}", e);
+            }
+        }
 
-        let mut file = get_file("text.txt");
-        writeln!(file, "[{}:{}]", file!(), line!());
     };
 
-    // Handle a single argument.
-    ($val:expr $(,)?) => {
+    // Handle a single argument to print.
+    ($path:expr, $val:expr $(,)?) => {
         match $val {
             tmp => {
-                match $crate::__private_helpers::get_file("text.txt") {
+                match $crate::__private_helpers::get_file($path) {
                     Ok(mut file) => {
                         use std::io::Write;
                         match writeln!(file, "[{}:{}] {} = {:#?}", file!(), line!(), stringify!($val), &tmp) {
@@ -33,8 +44,8 @@ macro_rules! dbg_to_file {
     };
 
     // Call dbg_to_file! for each argument.
-    ($($val:expr),+ $(,)?) => {
-        ($($crate::dbg_to_file!($val)),+,)
+    ($path:expr, $($val:expr),+ $(,)?) => {
+        ($($crate::dbg_to_file!($path, $val)),+,)
     };
 }
 
