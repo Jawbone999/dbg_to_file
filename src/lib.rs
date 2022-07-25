@@ -51,9 +51,9 @@ macro_rules! dbg_to_file {
 
 #[doc(hidden)]
 pub mod __private_helpers {
-    use std::fs::File;
+    use std::{fs::File, path::Path};
 
-    pub fn get_file(path: &str) -> Result<File, std::io::Error> {
+    pub fn get_file(path: impl AsRef<Path>) -> Result<File, std::io::Error> {
         File::options().create(true).append(true).open(path)
     }
 }
